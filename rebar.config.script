@@ -66,8 +66,9 @@ MakeDep =
                 Name when is_atom(Name) -> {Name, DefaultDepRef}
            end,
         RepoName = string:join(string:tokens(atom_to_list(AppName), "_"), "-"),
+        FilterRepo = ["emqx", "emqx-auth-aliyun-iot"],
         URL =
-            case string:equal(RepoName, "emqx") of
+            case lists:member(RepoName, FilterRepo) of
               true -> "https://github.com/sekfung/" ++ RepoName;
               false -> "https://github.com/emqx/" ++ RepoName
             end,
