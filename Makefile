@@ -19,16 +19,10 @@ else
 endif
 
 CT_APPS := emqx \
-           emqx_auth_clientid \
-           emqx_auth_http \
-           emqx_auth_jwt \
            emqx_auth_ldap \
-           emqx_auth_mongo \
-           emqx_auth_mysql \
-           emqx_auth_pgsql \
            emqx_auth_redis \
-           emqx_auth_username \
-           emqx_auth_mnesia \
+           emqx_auth_aliyun_iot \
+           emqx_kafka_bridge \
            emqx_sasl \
            emqx_coap \
            emqx_recon \
