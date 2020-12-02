@@ -45,7 +45,10 @@ CT_APPS := emqx \
            emqx_bridge_mqtt \
            emqx_rule_engine \
            emqx_extension_hook \
-           emqx_exproto
+           emqx_exproto \
+           emqx_auth_aliyun_iot \
+           emqx_kafka_bridge
+
 
 .PHONY: default
 default: $(REBAR) $(PROFILE)
