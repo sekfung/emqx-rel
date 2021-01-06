@@ -2,10 +2,10 @@
 
 REBAR_GIT_CLONE_OPTIONS += --depth 1
 export REBAR_GIT_CLONE_OPTIONS
+export LC_ALL=en_US.UTF-8
 
+REBAR_VERSION = 3.13.2-emqx-4
 REBAR = $(CURDIR)/rebar3
-
-REBAR_URL = https://s3.amazonaws.com/rebar3/rebar3
 
 PROFILE ?= emqx
 PROFILES := emqx emqx-edge
@@ -74,17 +74,19 @@ remove-deps:
 remove-build-meta-files:
 	@rm -f data/app.*.config data/vm.*.args rebar.lock
 
-.PHONY: $(PROFILES)
-$(PROFILES:%=%): $(REBAR)
+.PHONY: emqx
+emqx: $(REBAR)
 ifneq ($(OS),Windows_NT)
-	@ln -snf _build/$(@)/lib ./_checkouts
+	ln -snf _build/$(@)/lib ./_checkouts
 endif
-ifneq ($(shell echo $(@) |grep edge),)
-	export EMQX_DESC="EMQ X Edge"
-else
-	export EMQX_DESC="EMQ X Broker"
+	EMQX_DESC="EMQ X Broker" $(REBAR) as $(@) release
+
+.PHONY: emqx-edge
+emqx-edge: $(REBAR)
+ifneq ($(OS),Windows_NT)
+	ln -snf _build/$(@)/lib ./_checkouts
 endif
-	$(REBAR) as $(@) release
+	EMQX_DESC="EMQ X Edge" $(REBAR) as $(@) release
 
 .PHONY: $(PROFILES:%=build-%)
 $(PROFILES:%=build-%): $(REBAR)
@@ -121,23 +123,21 @@ $(CT_APPS:%=ct-%): checkout-$(PROFILE)
 	@mkdir -p tests/logs/$(@:ct-%=%)
 	@if [ -d _build/emqx/lib/$(@:ct-%=%)/_build/test/logs ]; then cp -r _build/emqx/lib/$(@:ct-%=%)/_build/test/logs/* tests/logs/$(@:ct-%=%); fi
 
+.PHONY: $(REBAR)
 $(REBAR):
-ifneq ($(wildcard rebar3),rebar3)
-	@curl -Lo rebar3 $(REBAR_URL) || wget $(REBAR_URL)
-endif
-	@chmod a+x rebar3
+	$(CURDIR)/ensure-rebar3.sh $(REBAR_VERSION)
 
 .PHONY: deps-all
 deps-all: $(REBAR) $(PROFILES:%=deps-%) $(PKG_PROFILES:%=deps-%)
 
-.PHONY: $(PROFILES:%=deps-%) $(PKG_PROFILES:%=deps-%)
-$(PROFILES:%=deps-%) $(PKG_PROFILES:%=deps-%): $(REBAR)
-ifneq ($(shell echo $(@) |grep edge),)
-	export EMQX_DESC="EMQ X Edge"
-else
-	export EMQX_DESC="EMQ X Broker"
-endif
-	$(REBAR) as $(@:deps-%=%) get-deps
+.PHONY: deps-emqx deps-emqx-pkg
+deps-emqx deps-emqx-pkg: $(REBAR)
+	EMQX_DESC="EMQ X Broker" $(REBAR) as $(@:deps-%=%) get-deps
+
+.PHONY: deps-emqx-edge deps-emqx-edge-pkg
+deps-emqx-edge deps-emqx-edge-pkg: $(REBAR)
+	EMQX_DESC="EMQ X Edge" $(REBAR) as $(@:deps-%=%) get-deps
+
 
 include packages.mk
 include docker.mk
